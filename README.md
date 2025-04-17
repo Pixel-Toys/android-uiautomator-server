@@ -9,35 +9,27 @@ testers...
 This project is to build a light weight jsonrpc server in Android device, so
 that we can just write PC side script to write UIAutomator tests.
 
-# Build
+# How to build
 
-- Run command:
+## Build APK
+
+In `Android Studio` -> `Build` -> `Build App Bundle/APK` -> `Build APK`
+
+Now apk file can be found in `app/build/outputs/apk/debug/app-debug.apk`
+
+## Launch Jar server
 
 ```bash
-$ ./gradlew build
-$ ./gradlew packageDebugAndroidTest
+adb push app/build/outputs/apk/debug/app-debug.apk /data/local/tmp
+adb shell CLASSPATH=/data/local/tmp/app-debug.apk app_process / com.wetest.uia2.Main
 ```
 
-- Run the jsonrpc server on Android device
-
-```bash
-$ ./gradlew cC
-$ adb forward tcp:9008 tcp:9008 # tcp forward
-```
-
-If debug apk already installed, There is no need to use gradle.
-
-simply run the following command
+## Test server
 
 ```
 adb forward tcp:9008 tcp:9008
-adb shell am instrument -w -r -e debug false -e class com.github.uiautomator.stub.Stub \
-    com.github.uiautomator.test/androidx.test.runner.AndroidJUnitRunner
-```
-
-# Run
-```bash
-$ curl -X POST -d '{"jsonrpc": "2.0", "id": "1f0f2655716023254ed2b57ba4198815", "method": "deviceInfo", "params": {}}' 'http://127.0.0.1:9008/jsonrpc/0'
+curl -X POST -d '{"jsonrpc": "2.0", "id": "1f0f2655716023254ed2b57ba4198815", "method": "deviceInfo", "params": {}}' 'http://127.0.0.1:9008/jsonrpc/0'
+# Expect output like
 {'currentPackageName': 'com.smartisanos.launcher',
  'displayHeight': 1920,
  'displayRotation': 0,
