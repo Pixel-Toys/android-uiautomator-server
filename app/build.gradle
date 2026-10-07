@@ -35,6 +35,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 34
+    buildToolsVersion project.findProperty("buildToolsOverride") ?: "34.0.0"
 
     // version code history
     // 1: original version

@@ -55,8 +55,29 @@ public class DeviceInfo {
         this._displayRotation = ud.getDisplayRotation();
         this._productName = ud.getProductName();
         this._naturalOrientation = ud.isNaturalOrientation();
-        this._displaySizeDpX = ud.getDisplaySizeDp().x;
-        this._displaySizeDpY = ud.getDisplaySizeDp().y;
+        // getDisplaySizeDp() builds a window context which can throw on newer
+        // Android (e.g. "ApplicationSharedMemory not initialized") when running
+        // headless via app_process. The pixel resolution above is always
+        // available, so derive dp from DisplayMetrics density and degrade
+        // gracefully instead of failing the whole deviceInfo() call.
+        try {
+            android.graphics.Point dp = ud.getDisplaySizeDp();
+            this._displaySizeDpX = dp.x;
+            this._displaySizeDpY = dp.y;
+        } catch (Throwable t) {
+            Log.e("getDisplaySizeDp failed, falling back to DisplayMetrics: " + t.getMessage());
+            try {
+                android.util.DisplayMetrics dm = InstrumentationRegistry
+                        .getInstrumentation().getContext().getResources().getDisplayMetrics();
+                float density = dm.density > 0 ? dm.density : 1f;
+                this._displaySizeDpX = Math.round(this._displayWidth / density);
+                this._displaySizeDpY = Math.round(this._displayHeight / density);
+            } catch (Throwable t2) {
+                Log.e("DisplayMetrics fallback failed: " + t2.getMessage());
+                this._displaySizeDpX = 0;
+                this._displaySizeDpY = 0;
+            }
+        }
         try {
             this._screenOn = ud.isScreenOn();
         } catch (RemoteException e) {
